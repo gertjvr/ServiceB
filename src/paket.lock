@@ -1,5 +1,7 @@
 FRAMEWORK: >= NET461
 NUGET
+  remote: https://ci.appveyor.com/nuget/servicea
+    ServiceA.MessageContracts (1.0.3)
   remote: https://www.nuget.org/api/v2
     xunit (2.1)
       xunit.assert (2.1)

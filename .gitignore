@@ -172,3 +172,4 @@ FakesAssemblies/
 !/src/packages/**
 
 src/paket-files
+src/paket.local

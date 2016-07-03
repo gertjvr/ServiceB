@@ -6,6 +6,7 @@
 
 var target = Argument<string>("target", "Default");
 var configuration = Argument<string>("configuration", "Release");
+var buildNumber = Argument<string>("build_number", "0.0.0");
 
 //////////////////////////////////////////////////////////////////////
 // EXTERNAL NUGET TOOLS
@@ -18,7 +19,7 @@ var configuration = Argument<string>("configuration", "Release");
 ///////////////////////////////////////////////////////////////////////////////
 
 var projectName = "ServiceB";
-var buildNumber = BuildSystem.IsRunningOnAppVeyor ? EnvironmentVariable("APPVEYOR_BUILD_VERSION") : "0.0.0.0";
+buildNumber = BuildSystem.IsRunningOnAppVeyor ? EnvironmentVariable("APPVEYOR_BUILD_VERSION") : buildNumber;
 
 var solutions = GetFiles("./**/*.sln");
 var solutionPaths = solutions.Select(solution => solution.GetDirectory());
