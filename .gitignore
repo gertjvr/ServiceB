@@ -170,3 +170,5 @@ FakesAssemblies/
 /tools
 /artifacts
 !/src/packages/**
+
+src/paket-files
