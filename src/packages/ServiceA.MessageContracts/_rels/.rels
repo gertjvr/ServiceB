@@ -1,1 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.microsoft.com/packaging/2010/07/manifest" Target="/ServiceA.MessageContracts.nuspec" Id="R641c3cba46744cb3" /><Relationship Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="/package/services/metadata/core-properties/a8bdaf04baaa4d19a355bfe4d05b4296.psmdcp" Id="R16036a6c7b86400e" /></Relationships>
+<?xml version="1.0" encoding="utf-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Type="http://schemas.microsoft.com/packaging/2010/07/manifest" Target="/ServiceA.MessageContracts.nuspec" Id="R32c5dda1ffed4b0a" />
+  <Relationship Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="/package/services/metadata/core-properties/a6514100d779417c82b10fd23d00326e.psmdcp" Id="R67722e8769394b1b" />
+</Relationships>
