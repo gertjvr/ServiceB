@@ -173,3 +173,4 @@ FakesAssemblies/
 
 src/paket-files
 src/paket.local
+src/GlobalAssemblyInfo.cs
