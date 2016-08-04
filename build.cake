@@ -6,27 +6,31 @@
 
 var target = Argument<string>("target", "Default");
 var configuration = Argument<string>("configuration", "Release");
-var buildNumber = Argument<string>("build_number", "0.0.0");
 
 //////////////////////////////////////////////////////////////////////
 // EXTERNAL NUGET TOOLS
 //////////////////////////////////////////////////////////////////////
 
-#Tool "xunit.runner.console"
+#tool "nuget:?package=GitVersion.CommandLine"
+#Tool "nuget:?package=xunit.runner.console"
 
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES
 ///////////////////////////////////////////////////////////////////////////////
 
 var projectName = "ServiceB";
-buildNumber = BuildSystem.IsRunningOnAppVeyor ? EnvironmentVariable("APPVEYOR_BUILD_VERSION") : buildNumber;
+
+string buildNumber = null;
+string nugetVersion = null;
+string preReleaseTag = null;
+string semVersion = null;
 
 var solutions = GetFiles("./**/*.sln");
 var solutionPaths = solutions.Select(solution => solution.GetDirectory());
 
 // Define directories.
 var srcDir = Directory("./src");
-var artifactsDir = Directory("./artifacts");
+var artifactsDir = Directory("../artifacts");
 var testResultsDir = artifactsDir + Directory("test-results");
 var nupkgDir = artifactsDir + Directory("nupkg");
 
@@ -39,9 +43,8 @@ var globalAssemblyFile = srcDir + File("GlobalAssemblyInfo.cs");
 
 Setup(() =>
 {
-    Information("Sample A");
-    Information("");
-    Information("v{0}", buildNumber);
+    Information("Sample B");
+	Information("");
 });
 
 Teardown(() =>
@@ -81,24 +84,53 @@ Task("__Clean")
 Task("__RestoreNugetPackages")
     .Does(() =>
 {
-    foreach(var solution in solutions)
-    {
-        Information("Restoring NuGet Packages for {0}", solution);
-        NuGetRestore(solution);
-    }
+	Information("Restoring NuGet Packages");
+
+    var settings = new ProcessSettings()
+		.UseWorkingDirectory(srcDir)
+		.WithArguments(arguments => arguments.Append("restore"));
+
+	using(var process = StartAndReturnProcess(srcDir + File(".paket\\paket.exe"), settings))
+	{
+		process.WaitForExit();
+		// This should output 0 as valid arguments supplied
+		if(process.GetExitCode() != 0) 
+		{
+			throw new CakeException("Failed to restore nuget packages.");
+		}
+	}
 });
 
 Task("__CreateNuGetPackages")
     .Does(() =>
 {
+	var settings = new ProcessSettings()
+		.UseWorkingDirectory(srcDir)
+		.WithArguments(arguments => 
+			arguments
+				.Append("pack")
+				.Append("output {0}", nupkgDir)
+				.Append("buildconfig {0}", configuration)
+				.Append("buildplatform {0}", "AnyCPU")
+				.Append("version {0}", buildNumber)
+				.Append("include-referenced-projects")
+			);
+
+	using(var process = StartAndReturnProcess(srcDir + File(".paket\\paket.exe"), settings))
+	{
+		process.WaitForExit();
+		// This should output 0 as valid arguments supplied
+		if(process.GetExitCode() != 0) 
+		{
+			throw new CakeException("Failed to create nuget packages.");
+		}
+	}
 });
 
 Task("__UpdateAssemblyVersionInformation")
     .Does(() =>
 {
-    Information("Updating assembly version to {0}", buildNumber);
-
-    CreateAssemblyInfo(globalAssemblyFile, new AssemblyInfoSettings {
+   CreateAssemblyInfo(globalAssemblyFile, new AssemblyInfoSettings {
         Version = buildNumber,
         FileVersion = buildNumber,
         Product = projectName,
@@ -106,6 +138,26 @@ Task("__UpdateAssemblyVersionInformation")
         Company = "Solutions",
         Copyright = "Copyright (c) " + DateTime.Now.Year
     });
+
+	GitVersion(new GitVersionSettings
+    {
+        UpdateAssemblyInfo = true,
+		UpdateAssemblyInfoFilePath = globalAssemblyFile,
+        LogFilePath = "console",
+        OutputType = GitVersionOutput.BuildServer,
+    });
+
+    var assertedVersions = GitVersion(new GitVersionSettings
+    {
+        OutputType = GitVersionOutput.Json,
+    });
+
+	buildNumber = assertedVersions.MajorMinorPatch;
+    nugetVersion = assertedVersions.NuGetVersion;
+    preReleaseTag = assertedVersions.PreReleaseTag;
+    semVersion = assertedVersions.LegacySemVerPadded;
+
+    Information("Updating assembly version to {0}", buildNumber);
 });
 
 Task("__BuildSolutions")
